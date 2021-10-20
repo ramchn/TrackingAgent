@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrackingAgent", "TrackingAgent\TrackingAgent.csproj", "{EA4C0784-0380-43EE-9EAB-182188844933}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "DATA", "DATA\DATA.vdproj", "{9FC8831E-76D1-49C2-830C-02956CFF6CCF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA4C0784-0380-43EE-9EAB-182188844933}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA4C0784-0380-43EE-9EAB-182188844933}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA4C0784-0380-43EE-9EAB-182188844933}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA4C0784-0380-43EE-9EAB-182188844933}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FC8831E-76D1-49C2-830C-02956CFF6CCF}.Debug|Any CPU.ActiveCfg = Debug
+		{9FC8831E-76D1-49C2-830C-02956CFF6CCF}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2153117F-330C-4A94-AEDD-756D4233615B}
+	EndGlobalSection
+EndGlobal
