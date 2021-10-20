@@ -56,7 +56,8 @@ namespace TrackingAgent
         }
 
         private void Tmr_Tick2(object sender, EventArgs e)
-        {            
+        {   
+            /*
             tmr.Stop();
             StringBuilder content = new StringBuilder();
             string str = String.Empty;
@@ -73,7 +74,8 @@ namespace TrackingAgent
             var strcontent = new StringContent("[" + content + "]", Encoding.UTF8, "application/json");
             var response = client.PostAsync("http://localhost:3000/create", strcontent);
             string result = ((StreamContent)response.Result.Content).ReadAsStringAsync().Result;
-            Console.WriteLine("http result: " + result);            
+            Console.WriteLine("http result: " + result); 
+            */
         }
 
         private string ActiveWindowTitle()
