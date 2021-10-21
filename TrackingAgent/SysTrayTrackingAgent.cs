@@ -5,10 +5,6 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using Newtonsoft.Json;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace TrackingAgent
 {
@@ -33,15 +29,10 @@ namespace TrackingAgent
             InitializeComponent();
             this.TopMost = true;
 
-            if (!File.Exists(filepath))
-            {
-                File.Create(filepath);
-            }
-
-            tmr.Interval = 1000 * 10; // 10secs
+            tmr.Interval = 1000; // 1sec
             tmr.Tick += Tmr_Tick;
 
-            tmr2.Interval = 1000 * 60 * 10; // 10mins
+            tmr2.Interval = 5000; // 5secs
             tmr2.Tick += Tmr_Tick2;
 
             trayMenu = new ContextMenu();
@@ -91,34 +82,69 @@ namespace TrackingAgent
             //check if it is null and add it to list if correct
             if (title != "")
             {
-                TextWriter writeFile = new StreamWriter(filepath, true);
-                //write data into file
-                writeFile.WriteLine("{\"timestamp\":\""+DateTime.Now.ToString("hh:mm:ss")+"\",\"title\":\""+title+"\"}");
-                writeFile.Flush();
-                writeFile.Close();
+                try
+                { 
+                    using(TextWriter writeFile = new StreamWriter(filepath, true))
+                    { 
+                        //write data into file
+                        writeFile.WriteLine("{\"timestamp\":\"" + DateTime.Now.ToString("hh:mm:ss") + "\",\"title\":\"" + title + "\"}");
+                        writeFile.Flush();
+                        writeFile.Close();
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
             }
         }
 
-        private void Tmr_Tick2(object sender, EventArgs e)
+        private async void Tmr_Tick2(object sender, EventArgs e)
         {   
             /*
+            // stop the write timer till reading is done
             tmr.Stop();
             StringBuilder content = new StringBuilder();
             string str = String.Empty;
-            TextReader readFile = new StreamReader(filepath);
-            while ((str = readFile.ReadLine()) != null)
+            try
             {
-                content.Append(str + ",");
+                using (TextReader readFile = new StreamReader(filepath))
+                {
+                    while ((str = readFile.ReadLine()) != null)
+                    {
+                        content.Append(str + ",");
+                    }
+                    content.Length--;
+                    readFile.Close();                    
+                }
             }
-            content.Length--;
-            readFile.Close();
-            File.WriteAllText(filepath, "");
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            // start the write timer
             tmr.Start();
             Console.WriteLine("file content: " + content);
+
+            // send the data to server
+            string Url = "http://localhost:3000/create";
             var strcontent = new StringContent("[" + content + "]", Encoding.UTF8, "application/json");
-            var response = client.PostAsync("http://localhost:3000/create", strcontent);
-            string result = ((StreamContent)response.Result.Content).ReadAsStringAsync().Result;
-            Console.WriteLine("http result: " + result); 
+
+            HttpResponseMessage responseMessage = null;
+            try
+            {
+                using (responseMessage = await client.PostAsync(Url, strcontent))
+                {
+                    string result = await responseMessage.Content.ReadAsStringAsync();
+                    Console.WriteLine("http result: " + result);
+                    // successfully sent the data, hence clear it in the local storage
+                    File.WriteAllText(filepath, "");
+                }                
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
             */
         }
 

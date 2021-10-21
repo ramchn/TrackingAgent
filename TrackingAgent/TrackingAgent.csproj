@@ -74,6 +74,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TrackingAgentInstaller.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TrackingAgentInstaller.Designer.cs">
+      <DependentUpon>TrackingAgentInstaller.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="SysTrayTrackingAgent.resx">
       <DependentUpon>SysTrayTrackingAgent.cs</DependentUpon>
     </EmbeddedResource>

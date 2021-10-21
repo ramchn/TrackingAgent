@@ -39,13 +39,13 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_A4A62B7CBE959F73706F6FCCDCF8FE12"
+        "MsmKey" = "8:_6D7C444F76DA2441A9CCDA1195F1D02E"
         "OwnerKey" = "8:_0583474F83DF483689F385F44B679481"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_A4A62B7CBE959F73706F6FCCDCF8FE12"
+        "MsmKey" = "8:_6D7C444F76DA2441A9CCDA1195F1D02E"
         "OwnerKey" = "8:_65EE9B95CE5746DD82AF49196B18D6DF"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -58,13 +58,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A4A62B7CBE959F73706F6FCCDCF8FE12"
+        "OwnerKey" = "8:_65EE9B95CE5746DD82AF49196B18D6DF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_65EE9B95CE5746DD82AF49196B18D6DF"
+        "OwnerKey" = "8:_6D7C444F76DA2441A9CCDA1195F1D02E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -130,6 +130,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
             }
         }
     }
@@ -137,6 +145,34 @@
     {
         "CustomAction"
         {
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_DDCFFED4BD8C40C896AC55DA458C9C17"
+            {
+            "Name" = "8:Primary output from TrackingAgent (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_0583474F83DF483689F385F44B679481"
+            "FileType" = "3:2"
+            "InstallAction" = "3:1"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_7E709DF4_7B75_46C2_A97F_D4C529869919"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:"
+            }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_F67ACAA3208B4ECC968EFC390A9C7BD6"
+            {
+            "Name" = "8:Primary output from TrackingAgent (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_0583474F83DF483689F385F44B679481"
+            "FileType" = "3:2"
+            "InstallAction" = "3:2"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_5562F157_B2E1_4F7E_B3E6_F69C5C3023B6"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:"
+            }
         }
         "DefaultFeature"
         {
@@ -191,14 +227,14 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A4A62B7CBE959F73706F6FCCDCF8FE12"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6D7C444F76DA2441A9CCDA1195F1D02E"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_A4A62B7CBE959F73706F6FCCDCF8FE12"
+                    "_6D7C444F76DA2441A9CCDA1195F1D02E"
                     {
                     "Name" = "8:Newtonsoft.Json.dll"
                     "Attributes" = "3:512"
@@ -279,7 +315,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrackingAgentV1"
         "ProductCode" = "8:{B2DBB41E-1B28-4B36-939D-22610B0A1D1C}"
-        "PackageCode" = "8:{EEECCB22-9AF6-40B2-8A70-68F29B4232E7}"
+        "PackageCode" = "8:{46D2A8E9-E6FA-400D-BB55-C2C055385A8F}"
         "UpgradeCode" = "8:{71098C78-BB6B-416A-AE63-090A6F911227}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
