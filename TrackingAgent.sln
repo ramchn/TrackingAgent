@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrackingAgent", "TrackingAg
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "DATA", "DATA\DATA.vdproj", "{9FC8831E-76D1-49C2-830C-02956CFF6CCF}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TrackingAgentV1", "TrackingAgentV1\TrackingAgentV1.vdproj", "{4D3767FD-5C24-4577-899C-B3CD68AC85DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,8 @@ Global
 		{EA4C0784-0380-43EE-9EAB-182188844933}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9FC8831E-76D1-49C2-830C-02956CFF6CCF}.Debug|Any CPU.ActiveCfg = Debug
 		{9FC8831E-76D1-49C2-830C-02956CFF6CCF}.Release|Any CPU.ActiveCfg = Release
+		{4D3767FD-5C24-4577-899C-B3CD68AC85DF}.Debug|Any CPU.ActiveCfg = Debug
+		{4D3767FD-5C24-4577-899C-B3CD68AC85DF}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

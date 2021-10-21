@@ -13,7 +13,7 @@ namespace TrackingAgent
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new TrackingAgent());
+            Application.Run(new SysTrayTrackingAgent());
         }
     }
 }

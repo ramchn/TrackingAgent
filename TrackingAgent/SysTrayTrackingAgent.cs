@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
@@ -11,8 +12,12 @@ using System.Collections.Generic;
 
 namespace TrackingAgent
 {
-    public partial class TrackingAgent : Form
+    public partial class SysTrayTrackingAgent : Form
     {
+
+        private NotifyIcon trayIcon;
+        private ContextMenu trayMenu;
+
         [DllImport("user32.dll")]
         static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll")]
@@ -23,7 +28,7 @@ namespace TrackingAgent
         String filepath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/log.txt";
         readonly HttpClient client = new HttpClient();
 
-        public TrackingAgent()
+        public SysTrayTrackingAgent()
         {
             InitializeComponent();
             this.TopMost = true;
@@ -33,11 +38,47 @@ namespace TrackingAgent
                 File.Create(filepath);
             }
 
-            tmr.Interval = 1000 * 30; // 30secs
+            tmr.Interval = 1000 * 10; // 10secs
             tmr.Tick += Tmr_Tick;
 
-            tmr2.Interval = 1000 * 60 * 15; // 15mins
-            tmr2.Tick += Tmr_Tick2;            
+            tmr2.Interval = 1000 * 60 * 10; // 10mins
+            tmr2.Tick += Tmr_Tick2;
+
+            trayMenu = new ContextMenu();
+            trayMenu.MenuItems.Add("Show", OnShow);
+            trayMenu.MenuItems.Add("Exit", OnExit);            
+
+            // Create a tray icon. In this example we use a
+            // standard system icon for simplicity, but you
+            // can of course use your own custom icon too.
+            trayIcon = new NotifyIcon();
+            trayIcon.Text = "Tracking Agent";
+            trayIcon.Icon = new Icon(SystemIcons.Application, 40, 40);
+
+            // Add menu to tray icon and show it.
+            trayIcon.ContextMenu = trayMenu;
+            trayIcon.Visible = true;
+
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            Visible = false; // Hide form window.
+            ShowInTaskbar = false; // Remove from taskbar.
+
+            base.OnLoad(e);
+        }
+
+        private void OnExit(object sender, EventArgs e)
+        {
+            tmr.Stop();
+            tmr2.Stop();
+            Application.Exit();
+        }
+
+        private void OnShow(object sender, EventArgs e)
+        {
+            this.Show();
         }
 
         private void Tmr_Tick(object sender, EventArgs e)
@@ -93,22 +134,15 @@ namespace TrackingAgent
             else return "";
         }
 
-        private void button_Click(object sender, EventArgs e)
+        private void SysTrayTrackingAgent_Load(object sender, EventArgs e)
         {
-            if (status.Text == "Running")
-            {
-                status.Text = "Stopped";
-                button.Text = "Start";
-                tmr.Stop();
-                tmr2.Stop();
-            }
-            else
-            {
-                status.Text = "Running";
-                button.Text = "Stop";
-                tmr.Start();
-                tmr2.Start();
-            }
+            tmr.Start();
+            tmr2.Start();
+        }
+
+        private void close_Click(object sender, EventArgs e)
+        {
+            this.Hide();
         }
     }
 }
