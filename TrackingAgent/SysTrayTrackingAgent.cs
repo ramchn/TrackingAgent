@@ -59,6 +59,9 @@ namespace TrackingAgent
             trayIcon.ContextMenu = trayMenu;
             trayIcon.Visible = true;
 
+            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            key.SetValue("TrackingAgent", Application.ExecutablePath);
+
         }
 
         protected override void OnLoad(EventArgs e)
