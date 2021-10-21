@@ -21,12 +21,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_20F9C0264C6343A4B113A22D767083B8"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_524A3D8E94D9E0715EE46635F071BC9B"
         "OwnerKey" = "8:_0583474F83DF483689F385F44B679481"
         "MsmSig" = "8:_UNDEFINED"
@@ -35,12 +29,6 @@
         {
         "MsmKey" = "8:_524A3D8E94D9E0715EE46635F071BC9B"
         "OwnerKey" = "8:_65EE9B95CE5746DD82AF49196B18D6DF"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_524A3D8E94D9E0715EE46635F071BC9B"
-        "OwnerKey" = "8:_20F9C0264C6343A4B113A22D767083B8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -51,8 +39,20 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_6D7C444F76DA2441A9CCDA1195F1D02E"
+        "OwnerKey" = "8:_0583474F83DF483689F385F44B679481"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_6D7C444F76DA2441A9CCDA1195F1D02E"
+        "OwnerKey" = "8:_65EE9B95CE5746DD82AF49196B18D6DF"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_524A3D8E94D9E0715EE46635F071BC9B"
+        "OwnerKey" = "8:_0583474F83DF483689F385F44B679481"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -64,13 +64,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_20F9C0264C6343A4B113A22D767083B8"
+        "OwnerKey" = "8:_6D7C444F76DA2441A9CCDA1195F1D02E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_0583474F83DF483689F385F44B679481"
+        "OwnerKey" = "8:_524A3D8E94D9E0715EE46635F071BC9B"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -91,6 +91,22 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
+            }
         }
         "Release"
         {
@@ -107,12 +123,56 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
+            }
         }
     }
     "Deployable"
     {
         "CustomAction"
         {
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_DDCFFED4BD8C40C896AC55DA458C9C17"
+            {
+            "Name" = "8:Primary output from TrackingAgent (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_0583474F83DF483689F385F44B679481"
+            "FileType" = "3:2"
+            "InstallAction" = "3:1"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_7E709DF4_7B75_46C2_A97F_D4C529869919"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:"
+            }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_F67ACAA3208B4ECC968EFC390A9C7BD6"
+            {
+            "Name" = "8:Primary output from TrackingAgent (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_0583474F83DF483689F385F44B679481"
+            "FileType" = "3:2"
+            "InstallAction" = "3:2"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_5562F157_B2E1_4F7E_B3E6_F69C5C3023B6"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:"
+            }
         }
         "DefaultFeature"
         {
@@ -150,6 +210,37 @@
                     }
                 }
             "SourcePath" = "8:System.Net.Http.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_FCB27F105B57491BB39D03F18F3ADF78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6D7C444F76DA2441A9CCDA1195F1D02E"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_6D7C444F76DA2441A9CCDA1195F1D02E"
+                    {
+                    "Name" = "8:Newtonsoft.Json.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Newtonsoft.Json.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_FCB27F105B57491BB39D03F18F3ADF78"
@@ -224,7 +315,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrackingAgentV1"
         "ProductCode" = "8:{B2DBB41E-1B28-4B36-939D-22610B0A1D1C}"
-        "PackageCode" = "8:{DA0473C8-87EB-4DD4-866F-AC099A5E09EE}"
+        "PackageCode" = "8:{46D2A8E9-E6FA-400D-BB55-C2C055385A8F}"
         "UpgradeCode" = "8:{71098C78-BB6B-416A-AE63-090A6F911227}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
@@ -749,34 +840,6 @@
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_FCB27F105B57491BB39D03F18F3ADF78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{EA4C0784-0380-43EE-9EAB-182188844933}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_20F9C0264C6343A4B113A22D767083B8"
-            {
-            "SourcePath" = "8:..\\TrackingAgent\\obj\\Debug\\TrackingAgent.exe"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_EB2DF95D30CC42F08A867C79FD0B8C7E"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
