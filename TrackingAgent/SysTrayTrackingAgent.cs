@@ -9,53 +9,52 @@ using System.Diagnostics;
 using Microsoft.Win32;
 using System.Windows.Automation;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace TrackingAgent
 {
     public partial class SysTrayTrackingAgent : Form
     {
-
+        /// initialize the variables
         private NotifyIcon trayIcon;
         private ContextMenu trayMenu;
-
-        Timer tmr = new Timer(); // capture the tracking info
-        Timer tmr2 = new Timer(); // send the captured info to server
-        String filepath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/log.txt";
-        readonly HttpClient client = new HttpClient();
-
-        const int WH_KEYBOARD_LL = 13;
-        const int WM_KEYDOWN = 0x100;
-        private LowLevelKeyboardProc _proc = hookProc;
-        public static int keypressedCount = 0;
-        private static IntPtr hhook = IntPtr.Zero;
-
-
+                
+        private const int WH_KEYBOARD_LL = 13;
+        private const int WM_KEYDOWN = 0x100;
         private const int WH_MOUSE_LL = 14;
-        private long timerFrequency = 0;
-        private long lastWheelTick = 0;
-        private LowLevelMouseProc _procMouse;
-        private static IntPtr _hookID = IntPtr.Zero;
 
-        private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc callback, IntPtr hInstance, uint threadId);
-
-        [DllImport("user32.dll")]
-        static extern bool UnhookWindowsHookEx(IntPtr hInstance);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, int wParam, IntPtr lParam);
-
-        [DllImport("kernel32.dll")]
-        static extern IntPtr LoadLibrary(string lpFileName);
+        private static int keypressedCount = 0;
+        private static int mouseLeftClickCount = 0;
+        private static int mouseRightClickCount = 0;
+        private static IntPtr keyboardhook = IntPtr.Zero;
+        private static IntPtr mousehook = IntPtr.Zero;
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private LowLevelKeyboardProc _keyboardHookProc = keyboardHookProc;
+        private LowLevelMouseProc _mouseHookProc = mouseHookProc;        
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+        private Timer tmr = new Timer(); // capture the tracking info
+        private Timer tmr2 = new Timer(); // send the captured info to server
+        private HttpClient client = new HttpClient(); // get the HttpClient
+        private String filepath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/log.txt";
 
+        /// DLL imports
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc proc, IntPtr lParam, uint threadId);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc proc, IntPtr lParam, uint threadId);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnhookWindowsHookEx(IntPtr hInstance);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, int wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr LoadLibrary(string lpFileName);            
+        
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -68,153 +67,39 @@ namespace TrackingAgent
         [DllImport("kernel32.dll")]
         private static extern bool QueryPerformanceFrequency(out long lpFrequency);
 
-
-        //Creating the extern function...  
         [DllImport("wininet.dll")]
         private extern static bool InternetGetConnectedState(out int Description, int ReservedValue);
 
         [DllImport("user32.dll")]
-        static extern IntPtr GetForegroundWindow();
+        private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
-        static extern int GetWindowText(IntPtr hwnd, StringBuilder ss, int count);
+        private static extern int GetWindowText(IntPtr hwnd, StringBuilder ss, int count);
 
-
-        public SysTrayTrackingAgent()
+        /// static methods
+        // get active window
+        private static string getActiveWindowTitle()
         {
-            InitializeComponent();
-            this.TopMost = true;
+            //Create the variable
+            const int nChar = 256;
+            StringBuilder ss = new StringBuilder(nChar);
 
-            tmr.Interval = 1000; // 1sec
-            tmr.Tick += Tmr_Tick;
+            //Run GetForeGroundWindows and get active window informations
+            //assign them into handle pointer variable
+            IntPtr handle = IntPtr.Zero;
+            handle = GetForegroundWindow();
 
-            tmr2.Interval = 5000; // 5secs
-            tmr2.Tick += Tmr_Tick2;
-
-            trayMenu = new ContextMenu();
-            trayMenu.MenuItems.Add("Exit", OnExit);            
-
-            // Create a tray icon. In this example we use a
-            // standard system icon for simplicity, but you
-            // can of course use your own custom icon too.
-            trayIcon = new NotifyIcon();
-            trayIcon.Text = "Tracking Agent";
-            trayIcon.Icon = new Icon(Directory.GetParent(System.Environment.CurrentDirectory).Parent.Parent.FullName + @"\images\tt_app.ico");
-            trayIcon.Visible = true;
-
-            // Add menu to tray icon and show it.
-            trayIcon.ContextMenu = trayMenu;
-            trayIcon.Visible = true;
-
-            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-            key.SetValue("TrackingAgent", Application.ExecutablePath);
-
-            // get Windows product Id
-            RegistryKey localMachine = RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, RegistryView.Registry64);
-            RegistryKey windowsNTKey = localMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion");
-            object productID = windowsNTKey.GetValue("ProductId");
-            string device_id = ""; //{\"device_id\":" +  "\"" + productID + "\""  + ",
-            string device_name = "\"device_name\":" + "\"" + Environment.MachineName + "\"" + ",";
-            string user_name = "\"user_name\":" + "\"" + Environment.UserName + "\"" + ",";
-            string label_type = " \"label_type\": \"Activity-Monitoring\"" + ",";
-
-            // Back Ground running Process
-            Process[] processCollection = Process.GetProcesses();
-            foreach (Process p in processCollection)
-            {
-                if (!string.IsNullOrEmpty(p.MainWindowTitle))
-                {
-                    Debug.WriteLine(device_id + device_name + user_name + label_type +
-                                    "\"current_time\":" + "\"" + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\"" + "," +
-                                    "\"label\":" + "\"" + p.ProcessName + "\"" + "," +
-                                    "\"value\":" + "\"" + p.MainWindowTitle + "\" }");                    
-                }
-            }
-
-
-            label_type = " \"label_type\": \"Brower-Window\"" + ",";
-            // Crome Browser
-            browserStatus(Process.GetProcessesByName("chrome"), device_id, device_name, user_name, label_type, "chrome");
-            browserStatus(Process.GetProcessesByName("msedge"), device_id, device_name, user_name, label_type, "msedge");
-            browserStatus(Process.GetProcessesByName("firefox"), device_id, device_name, user_name, label_type, "firefox");
-
-
-            label_type = " \"label_type\": \"Windows_Explorer\"" + ",";
-            // Code to get the system explorer (file maganger) opened file path
-            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
-            {
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer")
-                {
-                    if (Uri.IsWellFormedUriString(window.LocationURL, UriKind.Absolute))
-
-                        Debug.WriteLine(device_id + device_name + user_name + label_type +
-                                    "\"current_time\":" + "\"" + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\"" + "," +
-                                    "\"label\":" + "\"" + "chrome" + "\"" + "," +
-                                    "\"value\":" + "\"" + new Uri(window.LocationURL).LocalPath + "\" }");
-
-                    // Console.WriteLine(new Uri(window.LocationURL).LocalPath);
-                }
-            }
-
-            // Internet Status
-            int Desc;
-            label_type = " \"label_type\": \"Interactivity-Monitoring\"" + ",";
-            Debug.WriteLine(device_id + device_name + user_name + label_type +
-                                    "\"current_time\":" + "\"" + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\"" + "," +
-                                    "\"label\":" + "\"" + "Internet_Status" + "\"" + "," +
-                                    "\"value\":" + "\"" + InternetGetConnectedState(out Desc, 0) + "\" }");
-            
-
-            // Speaker Status 
-            IMMDeviceEnumerator enumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
-            IMMDevice speakers = enumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia);
-            IAudioMeterInformation meter = (IAudioMeterInformation)speakers.Activate(typeof(IAudioMeterInformation).GUID, 0, IntPtr.Zero);
-            float value = meter.GetPeakValue();
-
-            // this is a bit tricky. 0 is the official "no sound" value
-            // but for example, if you open a video and plays/stops with it (w/o killing the app/window/stream),
-            // the value will not be zero, but something really small (around 1E-09)
-            // so, depending on your context, it is up to you to decide
-            // if you want to test for 0 or for a small value
-            Debug.WriteLine(device_id + device_name + user_name + label_type +
-                                    "\"current_time\":" + "\"" + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\"" + "," +
-                                    "\"label\":" + "\"" + "Speaker_Status" + "\"" + "," +
-                                    "\"value\":" + "\"" + (value > 1E-08).ToString() + "\" }");
-            
-
-
-            // WebCam Status 
-            Debug.WriteLine(device_id + device_name + user_name + label_type +
-                                   "\"current_time\":" + "\"" + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\"" + "," +
-                                   "\"label\":" + "\"" + "WebCam" + "\"" + "," +
-                                   "\"value\":" + "\"" + IsWebCamInUse() + "\" }");
-            
-            // Mouse Status
-            _procMouse = HookCallback;
-            QueryPerformanceFrequency(out timerFrequency);
-            _hookID = SetMouseHook(_procMouse);
-
-            Debug.WriteLine(device_id + device_name + user_name + label_type +
-                                  "\"current_time\":" + "\"" + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\"" + "," +
-                                  "\"label\":" + "\"" + "Keyboard" + "\"" + "," +
-                                  "\"value\":" + "\"" + keypressedCount + "\" }");
-
+            if (GetWindowText(handle, ss, nChar) > 0) return ss.ToString();
+            else return "";
         }
 
-        public static void UnHook()
+        // get browser info
+        private static List<string> getInternetBrowserTabNames(Process[] procs)
         {
-            UnhookWindowsHookEx(hhook);
-        }
-
-        public static void browserStatus(Process[] procsChrome, string device_id, string device_name, string user_name, string label_type, string browserType)
-        {
-            if (procsChrome.Length <= 0)
+            List<String> tabNames = new List<string>();
+            if (procs.Length > 0)
             {
-                Console.WriteLine("Chrome is not running");
-            }
-            else
-            {
-                foreach (Process proc in procsChrome)
+                foreach (Process proc in procs)
                 {
                     // the chrome process must have a window 
                     if (proc.MainWindowHandle == IntPtr.Zero)
@@ -223,8 +108,6 @@ namespace TrackingAgent
                     }
                     // to find the tabs we first need to locate something reliable - the 'New Tab' button 
                     AutomationElement root = AutomationElement.FromHandle(proc.MainWindowHandle);
-                    //Condition condNewTab = new PropertyCondition(AutomationElement.NameProperty, "New Tab");
-                    //AutomationElement elmNewTab = root.FindFirst(TreeScope.Descendants, condNewTab);
                     Condition condition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TabItem);
                     var tabs = root.FindFirst(TreeScope.Descendants, condition);
 
@@ -239,105 +122,40 @@ namespace TrackingAgent
                             Condition condTabItem = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TabItem);
                             foreach (AutomationElement tabitem in elmTabStrip.FindAll(TreeScope.Children, condTabItem))
                             {
-                                Debug.WriteLine(device_id + device_name + user_name + label_type +
-                                    "\"current_time\":" + "\"" + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\"" + "," +
-                                    "\"label\":" + "\"" + browserType + "\"" + "," +
-                                    "\"value\":" + "\"" + tabitem.Current.Name + "\" }");                                
+                                tabNames.Add(tabitem.Current.Name);
                             }
                         }
                     }
-
                 }
             }
-
-
+            return tabNames;
         }
 
-
-        /// <summary>
-        /// Keyboard hook function
-        /// </summary>
-        /// <param name="code"></param>
-        /// <param name="wParam"></param>
-        /// <param name="lParam"></param>
-        /// <returns></returns>
-        public static IntPtr hookProc(int code, IntPtr wParam, IntPtr lParam)
+        // Keyboard hook function
+        private static IntPtr keyboardHookProc(int code, IntPtr wParam, IntPtr lParam)
         {
             if (code >= 0 && wParam == (IntPtr)WM_KEYDOWN)
             {
-                int vkCode = Marshal.ReadInt32(lParam);
                 keypressedCount = keypressedCount + 1;
-                Debug.WriteLine("key was pressed " + keypressedCount);
-                return CallNextHookEx(hhook, code, (int)wParam, lParam);
             }
-            else
-                return CallNextHookEx(hhook, code, (int)wParam, lParam);
+            return CallNextHookEx(keyboardhook, code, (int)wParam, lParam);
         }
 
-
-        /// <summary>
-        /// set mouse hook
-        /// </summary>
-        /// <param name="proc"></param>
-        /// <returns></returns>
-        private static IntPtr SetMouseHook(LowLevelMouseProc proc)
+        // mouse hook function
+        private static IntPtr mouseHookProc(int code, IntPtr wParam, IntPtr lParam)
         {
-            using (Process curProcess = Process.GetCurrentProcess())
-            using (ProcessModule curModule = curProcess.MainModule)
+            if (code >= 0 && wParam == (IntPtr)MouseMessages.WM_LBUTTONDOWN)
             {
-                return SetWindowsHookEx(WH_MOUSE_LL, proc,
-                    GetModuleHandle(curModule.ModuleName), 0);
+                mouseLeftClickCount = mouseLeftClickCount + 1;
             }
-        }
-
-
-        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-        {
-
-            if (nCode >= 0 && MouseMessages.WM_MOUSEWHEEL == (MouseMessages)wParam)
+            else if (code >= 0 && wParam == (IntPtr)MouseMessages.WM_RBUTTONDOWN)
             {
-                long wheelTick = 0;
-                QueryPerformanceCounter(out wheelTick);
-                long diff = wheelTick - lastWheelTick;
-                long RPM = (timerFrequency / diff) / 60;
-                lastWheelTick = wheelTick;
-                Debug.WriteLine("Mouse Dfference " + diff);
+                mouseRightClickCount = mouseRightClickCount + 1;
             }
-            // Debug.WriteLine("Mouse  WM_MOUSEMOVE " + MouseMessages.WM_MOUSEMOVE);
-            // Debug.WriteLine("Mouse  WM_LBUTTONUP " + MouseMessages.WM_LBUTTONUP);
-            // Debug.WriteLine("Mouse  WM_LBUTTONDOWN " + MouseMessages.WM_LBUTTONDOWN);
-            //  Debug.WriteLine("Mouse  WM_RBUTTONUP " + MouseMessages.WM_RBUTTONUP);
-            // Debug.WriteLine("Mouse  WM_RBUTTONDOWN " + MouseMessages.WM_RBUTTONDOWN);
-            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+            return CallNextHookEx(mousehook, code, (int)wParam, lParam);
         }
 
-        private enum MouseMessages
-        {
-            WM_LBUTTONDOWN = 0x0201,
-            WM_LBUTTONUP = 0x0202,
-            WM_MOUSEMOVE = 0x0200,
-            WM_MOUSEWHEEL = 0x020A,
-            WM_RBUTTONDOWN = 0x0204,
-            WM_RBUTTONUP = 0x0205
-        }
-
-        //---------------------------------------------------------------------------------------------
-
-        private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            UnHook();
-        }
-
-        public void SetHook()
-        {
-            IntPtr hInstance = LoadLibrary("User32");
-            hhook = SetWindowsHookEx(WH_KEYBOARD_LL, _proc, hInstance, 0);
-        }
-
-        /// <summary>
-        /// web cam usage
-        /// </summary>
-        /// <returns></returns>
+        // web cam usage
         private static bool IsWebCamInUse()
         {
             using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam\NonPackaged"))
@@ -357,8 +175,18 @@ namespace TrackingAgent
                     }
                 }
             }
-
             return false;
+        }
+
+        /// declarations
+        private enum MouseMessages
+        {
+            WM_LBUTTONDOWN = 0x0201,
+            // WM_LBUTTONUP = 0x0202,
+            // WM_MOUSEMOVE = 0x0200,
+            // WM_MOUSEWHEEL = 0x020A,
+            WM_RBUTTONDOWN = 0x0204,
+            // WM_RBUTTONUP = 0x0205
         }
 
         [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
@@ -383,9 +211,7 @@ namespace TrackingAgent
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("A95664D2-9614-4F35-A746-DE8DB63617E6")]
         private interface IMMDeviceEnumerator
         {
-            void NotNeeded();
-            IMMDevice GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role);
-            // the rest is not defined/needed
+             IMMDevice GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role);
         }
 
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("D666063F-1587-4E43-81F1-B948E807363F")]
@@ -393,7 +219,6 @@ namespace TrackingAgent
         {
             [return: MarshalAs(UnmanagedType.IUnknown)]
             object Activate([MarshalAs(UnmanagedType.LPStruct)] Guid iid, int dwClsCtx, IntPtr pActivationParams);
-            // the rest is not defined/needed
         }
 
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("C02216F6-8C67-4B5B-9D00-D008E73E0064")]
@@ -402,12 +227,53 @@ namespace TrackingAgent
             float GetPeakValue();
         }
 
+        /// constructor
+        public SysTrayTrackingAgent()
+        {
+            InitializeComponent();
+            this.TopMost = true;
+
+            // set the log write timer to every 30secs
+            tmr.Interval = 1000 * 5; // 5secs
+            tmr.Tick += Tmr_Tick;
+
+            // set the server write timer to every 15mins
+            tmr2.Interval = 1000 * 60 * 15; // 15mins
+            tmr2.Tick += Tmr_Tick2;
+
+            // create a tray menu
+            trayMenu = new ContextMenu();
+            trayMenu.MenuItems.Add("Exit", OnExit);            
+
+            // Create a tray icon. 
+            trayIcon = new NotifyIcon();
+            trayIcon.Text = "Tracking Agent";
+            trayIcon.Icon = new Icon(Directory.GetParent(System.Environment.CurrentDirectory).Parent.Parent.FullName + @"\images\tt_app.ico");
+            trayIcon.Visible = true;
+
+            // Add menu to tray icon and show it.
+            trayIcon.ContextMenu = trayMenu;
+            trayIcon.Visible = true;
+
+            // Set the app to run on startup
+            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            key.SetValue("TrackingAgent", Application.ExecutablePath);
+
+        }
+
+        /// overloaded method
         protected override void OnLoad(EventArgs e)
         {
             Visible = false; // Hide form window.
             ShowInTaskbar = false; // Remove from taskbar.
-
             base.OnLoad(e);
+        }
+
+        private void SysTrayTrackingAgent_Load(object sender, EventArgs e)
+        {
+            tmr.Start();
+            tmr2.Start();
+            SetHook();
         }
 
         private void OnExit(object sender, EventArgs e)
@@ -423,33 +289,137 @@ namespace TrackingAgent
             }
         }
 
+        ///  private functions
+        private void SetHook()
+        {
+            IntPtr hInstance = LoadLibrary("User32");
+            keyboardhook = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardHookProc, hInstance, 0);
+            mousehook = SetWindowsHookEx(WH_MOUSE_LL, _mouseHookProc, hInstance, 0);
+        }
+
+        private void UnHook()
+        {
+            UnhookWindowsHookEx(keyboardhook);
+            UnhookWindowsHookEx(mousehook);
+        }
+
         private void Tmr_Tick(object sender, EventArgs e)
         {
-            //get title of active window
-            string title = ActiveWindowTitle();
-            //check if it is null and add it to list if correct
-            if (title != "")
-            {
-                try
-                { 
-                    using(TextWriter writeFile = new StreamWriter(filepath, true))
-                    { 
-                        //write data into file
-                        writeFile.WriteLine("{\"timestamp\":\"" + DateTime.Now.ToString("hh:mm:ss") + "\",\"title\":\"" + title + "\"}");
-                        writeFile.Flush();
-                        writeFile.Close();
-                    }
-                }
-                catch(Exception ex)
+            try
+            { 
+                using(TextWriter writeFile = new StreamWriter(filepath, true))
                 {
-                    Console.WriteLine(ex.ToString());
+                    // get the current date and time
+                    string dateTime = DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss");
+
+                    //write (active window monitoring) data into file
+                    // get active window title                    
+                    string label = "None";
+                    string activeWindowTitle = getActiveWindowTitle();
+                    if (activeWindowTitle != "")
+                    {
+                        // seperating the label and value from the Title
+                        if (activeWindowTitle.LastIndexOf("|") != -1)
+                        {
+                            int lastIndex = activeWindowTitle.LastIndexOf("|");
+                            label = activeWindowTitle.Substring(lastIndex + 2);
+                            activeWindowTitle = activeWindowTitle.Substring(0, lastIndex - 1);
+                        }
+                        else if (activeWindowTitle.LastIndexOf("-") != -1)
+                        {
+                            int lastIndex = activeWindowTitle.LastIndexOf("-");
+                            label = activeWindowTitle.Substring(lastIndex + 2);
+                            activeWindowTitle = activeWindowTitle.Substring(0, lastIndex - 1);                            
+                        }
+                        writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Active Window Monitoring - Active Window\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"" + label + "\",\"value\":\"" + activeWindowTitle + "\"}");
+                    }
+
+                    // Explorer (file maganger) opened with file path
+                    foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
+                    {
+                        if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer")
+                        {
+                            if (Uri.IsWellFormedUriString(window.LocationURL, UriKind.Absolute))
+                            {
+                                writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Active Window Monitoring - Opened Windows\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"File Explorer\",\"value\":\"" + new Uri(window.LocationURL).LocalPath + "\"}");
+                            }
+                        }
+                    }
+
+                    // Chrome browser
+                    List<string> chromeTabs = getInternetBrowserTabNames(Process.GetProcessesByName("chrome"));
+                    foreach (string chromeTab in chromeTabs)
+                    {
+                        writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Active Window Monitoring - Opened Windows\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Google Chrome\",\"value\":\"" + chromeTab + "\"}");
+                    }
+                    // Edge browser
+                    List<string> msedgeTabs = getInternetBrowserTabNames(Process.GetProcessesByName("msedge"));
+                    foreach (string msedgeTab in msedgeTabs)
+                    {
+                        writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Active Window Monitoring - Opened Windows\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Microsoft Edge\",\"value\":\"" + msedgeTab + "\"}");
+                    }
+                    // Firefox browser
+                    List<string> firefoxTabs = getInternetBrowserTabNames(Process.GetProcessesByName("firefox"));
+                    foreach (string firefoxTab in firefoxTabs)
+                    {
+                        writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Active Window Monitoring - Opened Windows\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Firefox\",\"value\":\"" + firefoxTab + "\"}");
+                    }
+
+                    // Back ground running process
+                    Process[] processCollection = Process.GetProcesses();
+                    foreach (Process process in processCollection)
+                    {
+                        if (!string.IsNullOrEmpty(process.MainWindowTitle))
+                        {
+                            writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Active Window Monitoring - Background Process\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"" + process.ProcessName + "\",\"value\":\"" + process.MainWindowTitle + "\"}");
+                        }
+                    }
+
+                    // Internet Status
+                    int internetStatus;
+                    writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Interactivity Monitoring - Internet Status\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Is internet available?\",\"value\":\"" + InternetGetConnectedState(out internetStatus, 0) + "\"}");
+
+                    // number of keys pressed
+                    writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Interactivity Monitoring - Keyboard\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Number of keys pressed\",\"value\":\"" + keypressedCount + "\"}");
+                    keypressedCount = 0; // reset the value
+
+                    // mouse left click count
+                    writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Interactivity Monitoring - Mouse\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Mouse left click count\",\"value\":\"" + mouseLeftClickCount + "\"}");
+                    mouseLeftClickCount = 0; // reset the value
+
+                    // mouse right click count
+                    writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Interactivity Monitoring - Mouse\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Mouse right click count\",\"value\":\"" + mouseRightClickCount + "\"}");
+                    mouseRightClickCount = 0; // reset the value
+
+                    // WebCam Status 
+                    writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Interactivity Monitoring - Camera\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Is camera in use?\",\"value\":\"" + IsWebCamInUse() + "\"}");
+
+                    // Speaker Status 
+                    // IMMDeviceEnumerator enumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
+                    // IMMDevice speakers = enumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia);
+                    // IAudioMeterInformation meter = (IAudioMeterInformation)speakers.Activate(typeof(IAudioMeterInformation).GUID, 0, IntPtr.Zero);
+                    // float value = meter.GetPeakValue();
+
+                    // this is a bit tricky. 0 is the official "no sound" value
+                    // but for example, if you open a video and plays/stops with it (w/o killing the app/window/stream),
+                    // the value will not be zero, but something really small (around 1E-09)
+                    // so, depending on your context, it is up to you to decide
+                    // if you want to test for 0 or for a small value
+                    //writeFile.WriteLine("{\"device_name\":\"" + Environment.MachineName + "\",\"user_name\": \"" + Environment.UserName + "\",\"label_type\": \"Interactivity Monitoring - Speaker\",\"date_time\":\"" + dateTime + "\",\"label\":" + "\"Is speaker in use?\",\"value\":\"" + (value > 1E-08).ToString() + "\"}");
+                    
+                    
+                    writeFile.Flush();
+                    writeFile.Close();
                 }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
         }
 
         private async void Tmr_Tick2(object sender, EventArgs e)
-        {   
-            /*
+        {               
             // stop the write timer till reading is done
             tmr.Stop();
             StringBuilder content = new StringBuilder();
@@ -492,31 +462,7 @@ namespace TrackingAgent
             catch(Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-            }
-            */
+            }            
         }
-
-        private string ActiveWindowTitle()
-        {
-            //Create the variable
-            const int nChar = 256;
-            StringBuilder ss = new StringBuilder(nChar);
-
-            //Run GetForeGroundWindows and get active window informations
-            //assign them into handle pointer variable
-            IntPtr handle = IntPtr.Zero;
-            handle = GetForegroundWindow();
-
-            if (GetWindowText(handle, ss, nChar) > 0) return ss.ToString();
-            else return "";
-        }
-
-        private void SysTrayTrackingAgent_Load(object sender, EventArgs e)
-        {
-            tmr.Start();
-            tmr2.Start();
-            SetHook();
-        }
-
     }
 }

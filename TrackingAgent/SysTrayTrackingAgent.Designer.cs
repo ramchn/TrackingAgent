@@ -33,7 +33,6 @@ namespace TrackingAgent
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SysTrayTrackingAgent));
             this.myNotifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.status = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // myNotifyIcon
@@ -41,19 +40,9 @@ namespace TrackingAgent
             this.myNotifyIcon.Text = "NotifyIcon";
             this.myNotifyIcon.Visible = true;
             // 
-            // status
-            // 
-            this.status.AutoSize = true;
-            this.status.Location = new System.Drawing.Point(36, 19);
-            this.status.Name = "status";
-            this.status.Size = new System.Drawing.Size(69, 17);
-            this.status.TabIndex = 0;
-            this.status.Text = "Running..";
-            // 
             // SysTrayTrackingAgent
             // 
             this.ClientSize = new System.Drawing.Size(226, 52);
-            this.Controls.Add(this.status);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -61,13 +50,11 @@ namespace TrackingAgent
             this.Text = "Tracking Agent";
             this.Load += new System.EventHandler(this.SysTrayTrackingAgent_Load);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
         private System.Windows.Forms.NotifyIcon myNotifyIcon;
-        private System.Windows.Forms.Label status;
     }
 }
 
